@@ -2,7 +2,7 @@
   'use strict';
   var tooltip = window.tooltip = (function() {
 
-
+    var internal = {};
     var id = 'tt';
     var top = 3;
     var left = 3;
@@ -12,10 +12,52 @@
     var endalpha = 95;
     var alpha = 0;
     var tt, t, c, b, h;
-    var is_hidden = true;
+    internal.is_hidden = true;
     var is_static = false;
     var _options = {};
     var ie = document.all ? true : false;
+    var currentElement;
+
+
+    function debounce(func, wait, immediate) {
+      var timeout;
+      return function() {
+        var context = this, args = arguments;
+        var later = function() {
+          timeout = null;
+          if (!immediate) {func.apply(context, args);}
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow){func.apply(context, args);}
+      };
+    }
+
+    var getPos = function() {
+      var el = currentElement;
+      var u = ie ? event.clientY + document.documentElement.scrollTop : el.pageY;
+      var l = ie ? event.clientX + document.documentElement.scrollLeft : el.pageX;
+      var w = window, d = document,
+        e = d.documentElement, g = d.getElementsByTagName('body')[0],
+        doc_w = w.innerWidth || e.clientWidth || g.clientWidth;
+      //doc_h = w.innerHeight || e.clientHeight || g.clientHeight;
+
+      var active_align_w = 0;
+      var active_align_h = 0;
+
+      //adjust for page positioning:
+      var max_width = (tt.offsetWidth > maxw ? maxw : tt.offsetWidth);
+      active_align_h = ((u < (200)) || (_options.bottom)) ? (tt.offsetHeight) : 0; //doc_h/2
+      active_align_w = ((l > (doc_w - max_width)) || _options.left ) ? max_width : 0;
+
+      // SO PAGE POSITION IS NOT BEING UPDATED PROPERLY...
+      var ttop = ((u - h) + active_align_h) + 'px';
+      var tleft =  ((l + left) - active_align_w) + 'px';
+      tt.style.top = ttop;
+      tt.style.left = tleft;
+    };
+
     return{
       /* note: if you don't want to define a width, pass w as false.
        *  Pass true for isStatic, to lock the tooltip at the place of appearance. (can be used for tooltips containing links)
@@ -49,6 +91,7 @@
         if (document.addEventListener) {
           document.addEventListener('mousemove', this.pos, false);
         }
+
         if (isStatic) {
           //remove positioning in .5 seconds ( allows positioning to line up with target)
           tt.nuller = setInterval(function() {
@@ -74,14 +117,13 @@
           tt.onmouseover = null;
           tt.onmouseout = null;
           tt.click = null;
-
-          //document.onmousemove = this.pos;
           is_static = false;
         }
         tt.style.display = 'block';
-        c.innerHTML = v;//akui.fn.subCharsOnWordsLongerThan(v,40,"_"); // this prevents long names separated by underscore from popping outside of tooltip.
+        c.innerHTML = v;
+
         tt.style.width = w ? w + 'px' : 'auto';
-        is_hidden = false;
+        internal.is_hidden = false;
         if (!w && ie) {
           t.style.display = 'none';
           b.style.display = 'none';
@@ -106,27 +148,14 @@
         }
         clearInterval(tt.nuller);
       },
-      pos: function(el) {
+      pos: debounce(function(el) {
 
-        var u = ie ? event.clientY + document.documentElement.scrollTop : el.pageY;
-        var l = ie ? event.clientX + document.documentElement.scrollLeft : el.pageX;
-        var w = window, d = document,
-          e = d.documentElement, g = d.getElementsByTagName('body')[0],
-          doc_w = w.innerWidth || e.clientWidth || g.clientWidth,
-          doc_h = w.innerHeight || e.clientHeight || g.clientHeight;
+        // TODO: Since content is updating, we just need to pass 'currentElement in options
+        // and use that if it is passed.
+        currentElement = el;
+          getPos();
+      },250),
 
-        var active_align_w = 0;
-        var active_align_h = 0;
-
-        if (!is_hidden) {
-          //adjust for page positioning:
-          var max_width = (tt.offsetWidth > maxw ? maxw : tt.offsetWidth);
-          active_align_h = ((u < (200)) || (_options.bottom)) ? (tt.offsetHeight) : 0; //doc_h/2
-          active_align_w = ((l > (doc_w - max_width)) || _options.left ) ? max_width : 0;
-          tt.style.top = ((u - h) + active_align_h) + 'px';
-          tt.style.left = ((l + left) - active_align_w) + 'px';
-        }
-      },
       fade: function(d) {
         var a = alpha;
         if ((a !== endalpha && d === 1) || (a !== 0 && d === -1)) {
@@ -143,7 +172,7 @@
           clearInterval(tt.timer);
           if (d === -1) {
             tt.style.display = 'none';
-            is_hidden = true;
+            internal.is_hidden = true;
           }
         }
       },
