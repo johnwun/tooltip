@@ -1,0 +1,6 @@
+{"name":"tooltip",
+ "version":"1.0.0",
+ "main":["tooltip.js"],
+ "moduleType":["globals"],
+ "ignore":["node_modules","bower_components","test"]
+}
