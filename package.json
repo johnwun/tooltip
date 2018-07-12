@@ -1,0 +1,22 @@
+{
+  "name": "tooltip",
+  "version": "0.0.1",
+  "description": "simple script to add tooltip functionality. no dependencies",
+  "main": "tooltip.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnwun/tooltip/tooltip.git"
+  },
+  "keywords": [
+    "tooltip",
+    "javascript"
+  ],
+  "author": "Pascal Precht",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/johnwun/tooltip/issues"
+  },
+  "homepage": "https://github.com/johnwun/tooltip/",
+  "dependencies": {
+  }
+}
